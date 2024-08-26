@@ -17,7 +17,7 @@ require_once('app/views/components/header.nano.php');
                     <a href="#">CODECASTS [pt-BR]</a>
                     <a href="#">News</a>
                     <a href="#">Forge</a>
-                    <a href="https://github.com/gitcrypto-bucked/code_farm">GitHub</a>
+                    <a href="https://github.com/gitcrypto-bucked/PHP_FARM">GitHub</a>
                 </div>
             </div>
         </div>
