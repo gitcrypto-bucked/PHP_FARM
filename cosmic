@@ -1,0 +1,318 @@
+<?php
+echo "V.1.2".PHP_EOL;
+
+echo "Hello I'm cosmic.";
+echo PHP_EOL;
+echo PHP_EOL;
+
+echo "  *   *   *";echo PHP_EOL;
+
+$saudations= ['Hi', "Hello", "Howdy", "What’s up?","How’s it going", "Good Morning", "Good Night", "Good Afternun"];
+$saudations = array_map('strtolower', $saudations);
+$response;
+
+if(sizeof($argv)>0)
+{
+    
+    if(!empty($argv[1]))
+    {
+        if (false !== $key = array_search(strtolower(@$argv[1]), $saudations)) {
+            // found!
+            $response= ucfirst( @$saudations[@$key]).", ";
+            echo $response.PHP_EOL;
+        }
+       
+    }
+   
+
+    switch(@strtolower($argv[1]))
+    {
+        case 'start':
+            $ht ="RewriteEngine On
+                RewriteCond %{REQUEST_FILENAME} !-f
+                RewriteCond %{REQUEST_FILENAME} !-d
+                RewriteRule . index.php [L]";
+
+            if(!file_exists('.htaccess'))
+            {
+                $myfile = fopen(".htaccess", "w+");
+                fwrite($myfile, $ht);
+                fclose($myfile);
+                echo "File .htaccess created ".PHP_EOL;
+            }
+            else
+            {
+                echo "File .htaccess exists,  ".PHP_EOL;
+            }
+
+        break;
+        case 'create':
+            if(!isset($argv[2]))
+            {
+                echo "Sorry I can't understand.".PHP_EOL;echo PHP_EOL;
+                echo "For the verb create plase select what. \n Example create database or create system table @tableName";echo PHP_EOL;echo PHP_EOL;
+            }
+            if(isset($argv[2]) & @$argv[2]=='database')
+            {
+                echo "Please wait I'm creating a database."; echo PHP_EOL;
+                createDatabase($flag = true);
+            }
+        break;
+        case 'optimize':
+        break;
+        case 'help':
+            echo "Howdy partner, I'can understant what you need to help I'm sending my commands".PHP_EOL;
+            echo "Use:".PHP_EOL;
+            echo "-start: for redirect server requests to routering handle files".PHP_EOL;
+            echo '-create database: for create a database which you had filled in config/database'.PHP_EOL;
+            echo PHP_EOL;
+        break;
+        default:
+            if(empty($response))
+            {
+                echo "Howdy partner, I'can understant what you need to help I'm sending my commands".PHP_EOL;
+                echo "Use:".PHP_EOL;
+                echo "-start: for redirect server requests to routering handle files".PHP_EOL;
+                echo '-create database: for create a database which you had filled in config/database'.PHP_EOL;
+                echo PHP_EOL;
+            }
+        break;
+    }
+}
+
+
+
+function createDatabase($flag = false)
+{
+    $config = require_once("config/database.php");
+    if(empty($config['default']))
+    {
+        echo "Sorry your config/database file isn't filled.".PHP_EOL; exit;
+    }
+ 
+    global $username;
+    global $password;
+    global $dsn;
+    global $database;
+ 
+    switch(strtolower($config['default']))
+    {
+        case 'mysql': case "MYSQL":
+            if($config['mysql']['host']!='')
+            {
+                $dsn = "mysql:host={$config['mysql']['host']};dbname=";
+            }
+            else
+            {
+                echo 'Please in mysql section of config/database file set the Mysl Host'.PHP_EOL; exit;
+            }
+            if($config['mysql']['username']!='' && $config['mysql']['username']!=null)
+            {
+                $username = $config['mysql']['username'];
+            }
+            else
+            {   
+                echo 'Please in mysql section of config/database file set the Mysl Username'.PHP_EOL; exit;
+            }
+            if($config['mysql']['password']!='' && $config['mysql']['password']!=null)
+            {
+                $password = $config['mysql']['password'];
+            }
+            else
+            {
+                echo 'Please in mysql section of config/database file set the Mysl Password'.PHP_EOL; exit;
+            }
+            if($config['mysql']['database']!='' && $config['mysql']['database']!=null)
+            {
+                $database = $config['mysql']["database"];
+            }
+            else
+            {
+                echo 'Please in mysql section of config/database file set the Mysl database to be created'.PHP_EOL; exit;
+            }
+            
+            
+        break;
+        case 'postgres':
+            if($config['postgres']['host']!='')
+            {
+                $dsn = "pgsql:host={$config['postgres']['host']};port=5432;dbname=";
+            }
+            else
+            {
+                echo 'Please in postgres section of config/database file set the PostGres Host'.PHP_EOL; exit;
+            }
+
+            if($config['postgres']['username']!='' && $config['postgres']['username']!=null)
+            {
+                $username = $config['postgres']['username'];
+            }
+            else
+            {   
+                echo 'Please in postgres section of config/database file set the PostGres Username'.PHP_EOL; exit;
+            }
+            if($config['postgres']['password']!='' && $config['postgres']['password']!=null)
+            {
+                $password = $config['postgres']['password'];
+            }
+            else
+            {
+                echo 'Please in postgres section of config/database file set the Mysl Password'.PHP_EOL; exit;
+            }
+            if($config['postgres']['database']!='' && $config['postgres']['database']!=null)
+            {
+                $database = $config['postgres']["database"];
+            }
+            else
+            {
+                echo 'Please in postgres section of config/database file set the Mysl database to be created'.PHP_EOL; exit;
+            }
+          
+        break;
+    }
+
+
+    try
+    {
+        
+        // make a database connection
+        $pdo = new PDO($dsn, $username, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+        if ($pdo) 
+        {
+            $SQL ="CREATE DATABASE {$database}";
+            if($pdo->exec($SQL))
+            {
+                echo "Database {$database}  create suscessfull";
+            }
+        }
+    }
+    catch (PDOException $e) 
+    {
+        die($e->getMessage());
+    }
+    finally
+    {
+        $pdo =null;
+        unset($pdo);
+    }
+
+}
+
+
+function createSystemTable()
+{
+    if(empty($config['default']))
+    {
+        echo "Sorry your config/database file isn't filled.".PHP_EOL; exit;
+    }
+    
+    global $username;
+    global $password;
+    global $dsn;
+    global $database;
+ 
+    switch($config['default'])
+    {
+        case 'mysql': case "MYSQL":
+            if($config['mysql']['host']!='')
+            {
+                $dsn = "mysql:host={$config['mysql']['host']};dbname=";
+            }
+            else
+            {
+                echo 'Please in mysql section of config/database file set the Mysl Host'.PHP_EOL; exit;
+            }
+            if($config['mysql']['username']!='' && $config['mysql']['username']!=null)
+            {
+                $username = $config['mysql']['username'];
+            }
+            else
+            {   
+                echo 'Please in mysql section of config/database file set the Mysl Username'.PHP_EOL; exit;
+            }
+            if($config['mysql']['password']!='' && $config['mysql']['password']!=null)
+            {
+                $password = $config['mysql']['password'];
+            }
+            else
+            {
+                echo 'Please in mysql section of config/database file set the Mysl Password'.PHP_EOL; exit;
+            }
+            if($config['mysql']['database']!='' && $config['mysql']['database']!=null)
+            {
+                $database = $config['mysql']["database"];
+            }
+            else
+            {
+                echo 'Please in mysql section of config/database file set the Mysl database to be created'.PHP_EOL; exit;
+            }
+            
+            
+        break;
+        case 'postgres':
+            if($config['postgres']['host']!='')
+            {
+                $dsn = "pgsql:host={$config['postgres']['host']};port=5432;dbname=";
+            }
+            else
+            {
+                echo 'Please in postgres section of config/database file set the PostGres Host'.PHP_EOL; exit;
+            }
+
+            if($config['postgres']['username']!='' && $config['postgres']['username']!=null)
+            {
+                $username = $config['postgres']['username'];
+            }
+            else
+            {   
+                echo 'Please in postgres section of config/database file set the PostGres Username'.PHP_EOL; exit;
+            }
+            if($config['postgres']['password']!='' && $config['postgres']['password']!=null)
+            {
+                $password = $config['postgres']['password'];
+            }
+            else
+            {
+                echo 'Please in postgres section of config/database file set the Mysl Password'.PHP_EOL; exit;
+            }
+            if($config['postgres']['database']!='' && $config['postgres']['database']!=null)
+            {
+                $database = $config['postgres']["database"];
+            }
+            else
+            {
+                echo 'Please in postgres section of config/database file set the Mysl database to be created'.PHP_EOL; exit;
+            }
+          
+        break;
+    }
+
+
+    try
+    {
+        
+        // make a database connection
+        $pdo = new PDO($dsn, $username, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+
+        if ($pdo) 
+        {
+            if($pdo->exec($SQL))
+            {
+                echo "Database {$database}  create suscessfull";
+            }
+        }
+    }
+    catch (PDOException $e) 
+    {
+        die($e->getMessage());
+    }
+    finally
+    {
+        $pdo =null;
+        unset($pdo);
+    }
+}
+
+global $saudations;
+?>
